@@ -33,7 +33,7 @@ module.exports = function renderClientView() {
                 <div id="dot-3" class="w-8 h-2 rounded-full bg-gray-200 transition-colors duration-300"></div>
             </div>
 
-            <!-- Formulário Wizard (Agora sem action, controlado pelo JS) -->
+            <!-- Formulário Wizard -->
             <form id="wizardForm" class="step-container" onsubmit="enviarFormulario(event)">
                 
                 <!-- PASSO 1: Seguir Instagram -->
@@ -168,6 +168,20 @@ module.exports = function renderClientView() {
                 goToStep(3);
             }
 
+            function resetarWizard() {
+                // 1. Limpa todos os inputs de texto
+                document.getElementById('wizardForm').reset();
+                
+                // 2. Volta para o primeiro passo
+                goToStep(1);
+                
+                // 3. Bloqueia novamente o botão "Já segui, avançar"
+                const btn = document.getElementById('btnIrPasso2');
+                btn.disabled = true;
+                btn.classList.remove('bg-emerald-500', 'text-white', 'shadow-lg', 'hover:bg-emerald-600');
+                btn.classList.add('bg-gray-100', 'text-gray-400', 'cursor-not-allowed');
+            }
+
             // Funções dos Modais
             function abrirModalSucesso(mensagem) {
                 document.getElementById('msgSucessoText').textContent = mensagem;
@@ -205,19 +219,17 @@ module.exports = function renderClientView() {
                 }, 300);
             }
 
-            // Lógica de Envio via AJAX (Evita o carregamento da página)
+            // Lógica de Envio via AJAX
             async function enviarFormulario(event) {
-                event.preventDefault(); // Impede o redirecionamento
+                event.preventDefault();
                 
                 const btn = document.getElementById('btnSubmit');
                 const spanBtn = btn.querySelector('span');
                 const textoOriginal = spanBtn.textContent;
                 
-                // Estado de carregamento no botão
                 btn.disabled = true;
                 spanBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-3 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...';
 
-                // Capturando os dados
                 const data = {
                     nome: document.getElementById('inputNome').value.trim(),
                     telefone: document.getElementById('inputContato').value.trim(),
@@ -225,8 +237,7 @@ module.exports = function renderClientView() {
                 };
 
                 try {
-                    // ATENÇÃO: Verifique se sua rota da API de cadastro é /api/cadastrar
-                    const response = await fetch('/api/cadastrar', { 
+                    const response = await fetch('/cadastrar', { 
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
@@ -236,15 +247,15 @@ module.exports = function renderClientView() {
 
                     if (response.ok || response.status === 201) {
                         abrirModalSucesso(result.message || 'Sua pizzaria está cadastrada no sorteio! Lembre-se de não deixar de seguir a @ecocaixasba.');
-                        document.getElementById('wizardForm').reset(); // Limpa os campos
-                        goToStep(1); // Volta para o passo inicial
+                        
+                        // Chama a nova função de resetar após o sucesso
+                        resetarWizard();
                     } else {
                         abrirModalErro(result.error || 'Este Instagram já foi cadastrado ou ocorreu um erro.');
                     }
                 } catch (error) {
                     abrirModalErro('Erro de conexão com o servidor. Verifique sua internet.');
                 } finally {
-                    // Restaura o botão
                     btn.disabled = false;
                     spanBtn.textContent = textoOriginal;
                 }

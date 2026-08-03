@@ -7,7 +7,10 @@ const adminView = require('./adminView');
 
 const app = express();
 
-// Middleware para processar dados de formulários tradicionais (SSR)
+// Middleware para processar dados JSON enviados pelo front-end (fetch)
+app.use(express.json());
+
+// Middleware para processar dados de formulários tradicionais do Admin
 app.use(express.urlencoded({ extended: true }));
 
 // Libera a pasta "public" para carregar imagens e arquivos estáticos
@@ -16,8 +19,8 @@ app.use(express.static('public'));
 // Configuração do Banco de Dados
 const db = mysql.createPool({
     host: 'localhost',
-    user: 'sorteio',
-    password: '23!Bestdavidx',
+    user: 'root',
+    password: '1234',
     database: 'ecocaixas_sorteio'
 });
 
@@ -25,7 +28,7 @@ const db = mysql.createPool({
 // ROTAS DO CLIENTE
 // ==========================================
 app.get('/', (req, res) => {
-    // Pegamos mensagens de sucesso ou erro vindas por query string (redirecionamento)
+    // Pegamos mensagens vindas por query string para eventuais redirecionamentos antigos
     const { msg, erro } = req.query;
     res.send(clientView(msg, erro));
 });
@@ -38,13 +41,14 @@ app.post('/cadastrar', async (req, res) => {
             'INSERT INTO leads (nome, telefone, instagram) VALUES (?, ?, ?)',
             [nome, telefone, instagram.replace('@', '')]
         );
-        // Redireciona de volta para a home com mensagem de sucesso
-        res.redirect('/?msg=Cadastro realizado com sucesso! Boa sorte!');
+        // Retorna um JSON de SUCESSO para o front-end abrir o Modal
+        res.status(201).json({ message: 'Cadastro realizado com sucesso! Boa sorte!' });
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
-            res.redirect('/?erro=Este perfil do Instagram já está participando!');
+            // Retorna um JSON de ERRO para o front-end abrir o Modal
+            res.status(400).json({ error: 'Este perfil do Instagram já está participando!' });
         } else {
-            res.redirect('/?erro=Erro interno no servidor. Tente novamente.');
+            res.status(500).json({ error: 'Erro interno no servidor. Tente novamente.' });
         }
     }
 });
@@ -64,7 +68,7 @@ app.get('/admin', async (req, res) => {
             if (rows.length > 0) ganhador = rows[0];
         }
 
-        res.send(adminView(leads, ganhador, req.query.erro));
+        res.send(adminView(leads, ganhador, req.query.erro, req.query.msg));
     } catch (error) {
         res.send('Erro ao carregar o painel administrativo.');
     }
