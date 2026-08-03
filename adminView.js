@@ -269,7 +269,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                 <!-- Fase 3: Ganhador -->
                 <div id="faseGanhador" class="hidden">
                     <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-emerald-600 font-black text-2xl uppercase tracking-wider mb-2">Temos um vencedor!</h3>
+                    <h3 class="text-emerald-600 font-black text-2xl uppercase tracking-wider mb-2">Vencedor</h3>
                     
                     <div class="bg-gray-50 border border-gray-100 rounded-2xl p-6 my-6 shadow-inner">
                         <p class="text-sm text-gray-500 mb-2">A pizzaria ganhadora é:</p>
@@ -289,7 +289,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                     </div>
 
                     <button onclick="fecharModalSorteio()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-xl transition-colors relative z-10 text-lg">
-                        Concluir e Fechar
+                        Fechar
                     </button>
                 </div>
             </div>
