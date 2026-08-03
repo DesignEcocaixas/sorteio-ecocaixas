@@ -16,8 +16,8 @@ app.use(express.static('public'));
 // Configuração do Banco de Dados
 const db = mysql.createPool({
     host: 'localhost',
-    user: 'root',
-    password: '1234',
+    user: 'sorteio',
+    password: '23!Bestdavidx',
     database: 'ecocaixas_sorteio'
 });
 
