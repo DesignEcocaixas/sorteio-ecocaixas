@@ -272,7 +272,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                     <h3 class="text-emerald-600 font-black text-2xl uppercase tracking-wider mb-2">Vencedor</h3>
                     
                     <div class="bg-gray-50 border border-gray-100 rounded-2xl p-6 my-6 shadow-inner">
-                        <p class="text-sm text-gray-500 mb-2">A pizzaria ganhadora é:</p>
+                        <p class="text-sm text-gray-500 mb-2">A pizzaria vencedora é:</p>
                         
                         <div class="animate-shake-interval">
                             <h2 id="nomeGanhadorFinal" class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-green-600 drop-shadow-sm mb-6 break-words" style="font-family: 'Poppins', sans-serif;"></h2>
