@@ -343,7 +343,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                 
                 modalContent.classList.add('hidden');
 
-                const textos = ["A sua pizzaria", "Pode ser", "A campeã!", "Boa sorte!"];
+                const textos = ["A sua pizzaria", "Pode ser", "A vencedora!", "Boa sorte!"];
                 let indexTexto = 0;
 
                 function animarProximoTexto() {
