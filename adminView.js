@@ -26,8 +26,6 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
     const nomesLeads = leads.map(l => l.nome);
     const leadsJson = JSON.stringify(nomesLeads.length > 0 ? nomesLeads : ['Nenhuma pizzaria']);
     const ganhadorJson = ganhador ? JSON.stringify(ganhador) : 'null';
-    // Nova variável para guardar todos os dados dos leads no lado do cliente
-    const todosLeadsJson = JSON.stringify(leads);
 
     const linhasTabela = leads.map(lead => `
         <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors group">
@@ -185,12 +183,12 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                     Sorteio Ecocaixas
                 </h1>
                 
-                <!-- Nova área de botões e contagem -->
                 <div class="flex items-center gap-3">
-                    <button onclick="baixarPlanilha()" class="flex items-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 text-sm font-bold py-2 px-4 rounded-lg shadow-sm transition-colors active:scale-95">
+                    <!-- O botão agora é um link direto para a rota do Excel gerado pelo Node.js -->
+                    <a href="/admin/exportar" class="flex items-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 text-sm font-bold py-2 px-4 rounded-lg shadow-sm transition-colors active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        Baixar Planilha
-                    </button>
+                        Baixar Excel
+                    </a>
                     <span class="text-sm bg-emerald-700 px-3 py-2 rounded-lg border border-emerald-500 font-medium">
                         Total: ${leads.length}
                     </span>
@@ -256,7 +254,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
             </div>
         </div>
 
-        <!-- MODAL DE SORTEIO -->
+        <!-- MODAL DE SORTEIO COM FUNDO ESCURO E DESFOCADO PARA CONTRASTE MÁXIMO -->
         <div id="modalSorteio" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-md hidden">
             
             <div id="fasePreparacao" class="hidden absolute inset-0 items-center justify-center pointer-events-none z-50">
@@ -304,38 +302,6 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
         <script>
             const leadsParticipantes = ${leadsJson};
             const ganhador = ${ganhadorJson};
-            const todosLeads = ${todosLeadsJson};
-
-            // FUNÇÃO DE DOWNLOAD DE PLANILHA CSV
-            function baixarPlanilha() {
-                if (!todosLeads || todosLeads.length === 0) {
-                    alert('Nenhum participante cadastrado para baixar.');
-                    return;
-                }
-
-                // O '\\uFEFF' no início garante que os caracteres com acentos funcionem no Excel
-                let csvContent = "\\uFEFFID,Nome da Pizzaria,Telefone,Instagram\\n";
-
-                todosLeads.forEach(lead => {
-                    const id = lead.id || '';
-                    // Protege os valores com aspas para não quebrar o CSV caso haja vírgulas nos nomes
-                    const nome = '"' + (lead.nome || '').replace(/"/g, '""') + '"';
-                    const telefone = '"' + (lead.telefone || '').replace(/"/g, '""') + '"';
-                    const instagram = '"' + (lead.instagram || '').replace(/"/g, '""') + '"';
-                    
-                    csvContent += \`\${id},\${nome},\${telefone},\${instagram}\\n\`;
-                });
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.setAttribute('href', url);
-                link.setAttribute('download', 'participantes_ecocaixas.csv');
-                
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
 
             // MODAL DE EXCLUSÃO
             function abrirModalExclusao(id, nome) {

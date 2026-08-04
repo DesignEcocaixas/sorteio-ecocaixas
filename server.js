@@ -1,5 +1,6 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
+const ExcelJS = require('exceljs');
 
 // Importando as nossas views SSR
 const clientView = require('./clientView');
@@ -98,6 +99,52 @@ app.post('/admin/excluir', async (req, res) => {
         res.redirect('/admin?msg=Pizzaria excluída com sucesso!');
     } catch (error) {
         res.redirect('/admin?erro=Erro ao excluir a pizzaria.');
+    }
+});
+
+// ROTA PARA EXPORTAR PLANILHA EXCEL
+app.get('/admin/exportar', async (req, res) => {
+    try {
+        const [leads] = await db.execute('SELECT * FROM leads ORDER BY data_cadastro DESC');
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Participantes');
+
+        // Define as colunas
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Nome da Pizzaria', key: 'nome', width: 35 },
+            { header: 'Telefone', key: 'telefone', width: 25 },
+            { header: 'Instagram', key: 'instagram', width: 30 },
+            { header: 'Data de Cadastro', key: 'data_cadastro', width: 25 }
+        ];
+
+        // Formatação visual do cabeçalho (Fundo verde, texto branco)
+        worksheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        worksheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF10B981' } };
+        worksheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Adiciona as linhas
+        leads.forEach(lead => {
+            worksheet.addRow({
+                id: lead.id,
+                nome: lead.nome,
+                telefone: lead.telefone,
+                instagram: '@' + lead.instagram,
+                data_cadastro: lead.data_cadastro ? new Date(lead.data_cadastro).toLocaleString('pt-BR') : ''
+            });
+        });
+
+        // Configura o cabeçalho da resposta para baixar o arquivo
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=participantes_ecocaixas.xlsx');
+
+        // Envia o arquivo
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('Erro ao gerar Excel:', error);
+        res.redirect('/admin?erro=Erro ao gerar o arquivo Excel.');
     }
 });
 
