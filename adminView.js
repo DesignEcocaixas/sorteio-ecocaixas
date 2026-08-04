@@ -26,6 +26,8 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
     const nomesLeads = leads.map(l => l.nome);
     const leadsJson = JSON.stringify(nomesLeads.length > 0 ? nomesLeads : ['Nenhuma pizzaria']);
     const ganhadorJson = ganhador ? JSON.stringify(ganhador) : 'null';
+    // Nova variável para guardar todos os dados dos leads no lado do cliente
+    const todosLeadsJson = JSON.stringify(leads);
 
     const linhasTabela = leads.map(lead => `
         <tr class="border-b border-gray-200 hover:bg-gray-50 transition-colors group">
@@ -177,14 +179,22 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
     <body class="bg-gray-50 font-sans text-gray-800 min-h-screen">
 
         <nav class="bg-emerald-600 text-white shadow-md p-4">
-            <div class="container mx-auto flex justify-between items-center">
+            <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h1 class="text-xl font-bold flex items-center gap-3">
                     <img src="/img/eco.png" alt="Logo Ecocaixas" class="h-8 w-auto object-contain drop-shadow-md">
                     Sorteio Ecocaixas
                 </h1>
-                <span class="text-sm bg-emerald-700 px-3 py-1 rounded-full border border-emerald-500">
-                    Total: ${leads.length} Pizzarias
-                </span>
+                
+                <!-- Nova área de botões e contagem -->
+                <div class="flex items-center gap-3">
+                    <button onclick="baixarPlanilha()" class="flex items-center gap-2 bg-white text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 text-sm font-bold py-2 px-4 rounded-lg shadow-sm transition-colors active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Baixar Planilha
+                    </button>
+                    <span class="text-sm bg-emerald-700 px-3 py-2 rounded-lg border border-emerald-500 font-medium">
+                        Total: ${leads.length}
+                    </span>
+                </div>
             </div>
         </nav>
 
@@ -246,18 +256,15 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
             </div>
         </div>
 
-        <!-- MODAL DE SORTEIO COM FUNDO ESCURO E DESFOCADO PARA CONTRASTE MÁXIMO -->
+        <!-- MODAL DE SORTEIO -->
         <div id="modalSorteio" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-md hidden">
             
-            <!-- Fase 1: Textos Animados (Gigantes, claros e com sombra pesada) -->
             <div id="fasePreparacao" class="hidden absolute inset-0 items-center justify-center pointer-events-none z-50">
                 <h2 id="textoAnimado" class="text-6xl md:text-8xl lg:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-300 uppercase tracking-widest opacity-0 drop-shadow-[0_4px_8px_rgba(0,0,0,0.6)] text-center px-4" style="font-family: 'Poppins', sans-serif;"></h2>
             </div>
 
-            <!-- Fases 2 e 3: O Container Branco Reduzido (max-w-3xl) -->
             <div id="modalContent" class="hidden bg-white rounded-3xl shadow-2xl p-8 max-w-3xl w-full mx-4 text-center transform scale-95 transition-transform duration-300">
                 
-                <!-- Fase 2: Caça-Níquel -->
                 <div id="faseEmbaralhando" class="py-8 hidden">
                     <h3 class="text-xl text-gray-500 font-bold mb-6 uppercase tracking-widest text-emerald-500 animate-pulse">Sorteando...</h3>
                     
@@ -266,13 +273,12 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                     </div>
                 </div>
 
-                <!-- Fase 3: Ganhador -->
                 <div id="faseGanhador" class="hidden">
                     <div class="text-6xl mb-4">🎉</div>
-                    <h3 class="text-emerald-600 font-black text-2xl uppercase tracking-wider mb-2">Vencedor</h3>
+                    <h3 class="text-emerald-600 font-black text-2xl uppercase tracking-wider mb-2">Temos um vencedor!</h3>
                     
                     <div class="bg-gray-50 border border-gray-100 rounded-2xl p-6 my-6 shadow-inner">
-                        <p class="text-sm text-gray-500 mb-2">A pizzaria vencedora é:</p>
+                        <p class="text-sm text-gray-500 mb-2">A pizzaria ganhadora é:</p>
                         
                         <div class="animate-shake-interval">
                             <h2 id="nomeGanhadorFinal" class="text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-green-600 drop-shadow-sm mb-6 break-words" style="font-family: 'Poppins', sans-serif;"></h2>
@@ -289,7 +295,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                     </div>
 
                     <button onclick="fecharModalSorteio()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 rounded-xl transition-colors relative z-10 text-lg">
-                        Fechar
+                        Concluir e Fechar
                     </button>
                 </div>
             </div>
@@ -298,6 +304,38 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
         <script>
             const leadsParticipantes = ${leadsJson};
             const ganhador = ${ganhadorJson};
+            const todosLeads = ${todosLeadsJson};
+
+            // FUNÇÃO DE DOWNLOAD DE PLANILHA CSV
+            function baixarPlanilha() {
+                if (!todosLeads || todosLeads.length === 0) {
+                    alert('Nenhum participante cadastrado para baixar.');
+                    return;
+                }
+
+                // O '\\uFEFF' no início garante que os caracteres com acentos funcionem no Excel
+                let csvContent = "\\uFEFFID,Nome da Pizzaria,Telefone,Instagram\\n";
+
+                todosLeads.forEach(lead => {
+                    const id = lead.id || '';
+                    // Protege os valores com aspas para não quebrar o CSV caso haja vírgulas nos nomes
+                    const nome = '"' + (lead.nome || '').replace(/"/g, '""') + '"';
+                    const telefone = '"' + (lead.telefone || '').replace(/"/g, '""') + '"';
+                    const instagram = '"' + (lead.instagram || '').replace(/"/g, '""') + '"';
+                    
+                    csvContent += \`\${id},\${nome},\${telefone},\${instagram}\\n\`;
+                });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'participantes_ecocaixas.csv');
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
 
             // MODAL DE EXCLUSÃO
             function abrirModalExclusao(id, nome) {
@@ -343,7 +381,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                 
                 modalContent.classList.add('hidden');
 
-                const textos = ["A sua pizzaria", "Pode ser", "A vencedora!", "Boa sorte!"];
+                const textos = ["A sua pizzaria", "Pode ser", "A campeã!", "Boa sorte!"];
                 let indexTexto = 0;
 
                 function animarProximoTexto() {
@@ -355,7 +393,7 @@ module.exports = function renderAdminView(leads = [], ganhador = null, erro = nu
                         textoAnimado.classList.add('animate-fade-text');
                         
                         indexTexto++;
-                        setTimeout(animarProximoTexto, 1500); // 1.5s por texto
+                        setTimeout(animarProximoTexto, 1500); 
                     } else {
                         // Fim da preparação
                         fasePreparacao.classList.add('hidden');
